@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import time
+import typing
 
 import nio
 import twitter
@@ -11,6 +12,10 @@ with open("config.yaml", "rb") as fp:
 
 screen_name, slug = config["twitter"]["list_full_name"].split("/")
 
+hashtag = config["twitter"].get("hashtag")  # type: typing.Optional[str]
+if hashtag:
+    hashtag = hashtag.replace("#", "").lower()
+
 
 def init_twitter():
     cli = twitter.Api(
@@ -20,11 +25,14 @@ def init_twitter():
         access_token_secret=config["twitter"]["app"]["access_token_secret"],
     )
 
+    # Get an initial list of tweets.
     timeline = cli.GetListTimeline(
         slug=slug,
         owner_screen_name=screen_name,
     )
-    since_id = timeline[0].id if len(timeline) else None
+    # Attempt to extract the tweet ID to start looking from.
+    # since_id = timeline[0].id if len(timeline) else None
+    since_id = "1246147421903650819"
     return cli, since_id
 
 
@@ -43,6 +51,45 @@ async def init_matrix():
         await cli.join(room_id)
 
     return cli
+
+
+def build_event_content(tweet):
+    # Build the tweet's URL, which incorporates the following format:
+    # https://twitter.com/user/status/0123456789
+    url = "https://twitter.com/{screen_name}/status/{id}".format(
+        screen_name=tweet.user.screen_name, id=tweet.id,
+    )
+
+    # Build a basic body of the message.
+    raw_body = '{user_name}: {text} - {url}'.format(
+        user_name=tweet.user.name, text=tweet.text, url=url,
+    )
+    content = {"msgtype": "m.notice", "body": raw_body}
+
+    # Add some HTML formatting if the config includes a template.
+    notice_template = config["matrix"].get("notice_template")
+    if notice_template:
+        formatted_body = notice_template.format(
+            user_name=tweet.user.name,
+            screen_name=tweet.user.screen_name,
+            text=tweet.text,
+            url=url,
+        )
+
+        content["format"] = "org.matrix.custom.html"
+        content["formatted_body"] = formatted_body
+
+    return content
+
+
+def hashtag_in_tweet(tweet):
+    in_tweet = False
+    # Loop over the tweet's hashtags and check if the text of one matches the one
+    # included in the configuration file.
+    for tweet_hashtag in tweet.hashtags:
+        if tweet_hashtag.text.lower() == hashtag:
+            in_tweet = True
+    return in_tweet
 
 
 async def loop():
@@ -82,23 +129,17 @@ async def loop():
 
         # Iterate over the tweets.
         for tweet in timeline:
-            text = tweet.text  # type: str
-
             # If a hashtag was provided and the tweet doesn't include it, pass over this
             # tweet.
-            hashtag = config["twitter"].get("hashtag")
-            if hashtag and hashtag.lower() not in text.lower():
+            if hashtag and not hashtag_in_tweet(tweet):
                 continue
 
             # Send the tweet as a notice to the Matrix room.
-            message = "%s: %s" % (tweet.user.name, text)
+            content = build_event_content(tweet)
             await matrix_client.room_send(
                 room_id=config["matrix"]["room_id"],
                 message_type="m.room.message",
-                content={
-                    "msgtype": "m.notice",
-                    "body": message,
-                },
+                content=content,
             )
 
 asyncio.get_event_loop().run_until_complete(loop())
