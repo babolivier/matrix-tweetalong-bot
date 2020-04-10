@@ -91,9 +91,16 @@ def hashtag_in_tweet(tweet):
     return in_tweet
 
 
+def log(msg):
+    now_iso = datetime.datetime.now().isoformat()
+    print("%s - %s" % (now_iso, msg))
+
+
 async def loop():
     twitter_client, since_id = init_twitter()
     matrix_client = await init_matrix()
+
+    log("Initialisation complete")
 
     while True:
         # The /lists/statuses Twitter API endpoint is rate-limited to 900 requests
@@ -111,7 +118,7 @@ async def loop():
                 since_id=since_id,
             )
         except twitter.TwitterError as e:
-            print("Twitter API returned an error: %s" % e.message[0]["message"])
+            log("Twitter API returned an error: %s" % e.message[0]["message"])
             continue
 
         # If no tweet was returned, loop over.
@@ -138,7 +145,6 @@ async def loop():
                 content=content,
             )
 
-            now_iso = datetime.datetime.now().isoformat()
-            print("%s - Sent notice for tweet %s" % (now_iso, tweet.id))
+            log("Sent notice for tweet %s" % tweet.id)
 
 asyncio.get_event_loop().run_until_complete(loop())
