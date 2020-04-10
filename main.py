@@ -103,9 +103,6 @@ async def loop():
         # take more than 0ms, but we don't really care being a few ms behind.
         time.sleep(1)
 
-        now_iso = datetime.datetime.now().isoformat()
-        print("%s - Requesting tweets more recent than %s" % (now_iso, since_id))
-
         # Get the latest tweets in the list. If an error happened, loop over it.
         try:
             timeline = twitter_client.GetListTimeline(
@@ -140,5 +137,8 @@ async def loop():
                 message_type="m.room.message",
                 content=content,
             )
+
+            now_iso = datetime.datetime.now().isoformat()
+            print("%s - Sent notice for tweet %s" % (now_iso, tweet.id))
 
 asyncio.get_event_loop().run_until_complete(loop())
