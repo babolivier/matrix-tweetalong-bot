@@ -31,8 +31,7 @@ def init_twitter():
         owner_screen_name=screen_name,
     )
     # Attempt to extract the tweet ID to start looking from.
-    # since_id = timeline[0].id if len(timeline) else None
-    since_id = "1246147421903650819"
+    since_id = timeline[0].id if len(timeline) else None
     return cli, since_id
 
 
