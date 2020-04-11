@@ -1,0 +1,38 @@
+twitter:
+  # Twitter API credentials.
+  app:
+    consumer_key: "API_CONSUMER_KEY"
+    consumer_secret: "API_CONSUMER_SECRET"
+    access_token: "ACCESS_TOKEN"
+    access_token_secret: "ACCESS_TOKEN_SECRET"
+  # List to retrieve tweets from. Must be using the format @screen_name/slug.
+  list_full_name: "@username/slug"
+  # Optional hashtag to filter tweets with. A tweet that does not include this hashtag
+  # (regardless of the case) will not be sent to the Matrix room. The leading '#'
+  # character is optional (and stripped by the bot anyway).
+  hashtag: "#SomeHashtag"
+
+matrix:
+  # URL of the homeserver the bot lives on.
+  hs_url: "https://matrix.example.com"
+  # The bot's MXID.
+  mxid: "@tweetalong_bot:example.com"
+  # The bot's password.
+  password: 'SOME_PASSWORD'
+  # The ID of the room to send tweets to. If the bot isn't already in the room, it will
+  # try to join it on startup. If the room is private, make sure to invite the bot before
+  # starting it up.
+  room_id: '!ranPjkLLNvwBCUKXFQ:abolivier.bzh'
+  # Optional HTML template to use when sending the tweet to the room. The available
+  # placeholders are:
+  #   * user_name: The display name of the user who sent the tweet.
+  #                (e.g. "Brendan Abolivier")
+  #   * screen_name: The @username of the user who sent the tweet.
+  #                  (e.g. "BrenAbolivier")
+  #   * text: The full text of the tweet. If the tweet has an attachment, its t.co URL
+  #           will be appended at the end of this text.
+  #   * url: The URL to the tweet.
+  #          (e.g. https://twitter.com/Emily_Rosina/status/1247879074678050822)
+  # If no template is provided, the notice will be sent in plain text using the following
+  # format: '{user_name}: {text} - {url}'.
+  notice_template: '<u>{user_name}</u> (@{screen_name}): {text}<br />{url}'
