@@ -23,6 +23,7 @@ def init_twitter():
         consumer_secret=config["twitter"]["app"]["consumer_secret"],
         access_token_key=config["twitter"]["app"]["access_token"],
         access_token_secret=config["twitter"]["app"]["access_token_secret"],
+        tweet_mode="extended",
     )
 
     # Get an initial list of tweets.
@@ -61,7 +62,7 @@ def build_event_content(tweet):
 
     # Build a basic body of the message.
     raw_body = '{user_name}: {text} - {url}'.format(
-        user_name=tweet.user.name, text=tweet.text, url=url,
+        user_name=tweet.user.name, text=tweet.full_text, url=url,
     )
     content = {"msgtype": "m.notice", "body": raw_body}
 
@@ -71,7 +72,7 @@ def build_event_content(tweet):
         formatted_body = notice_template.format(
             user_name=tweet.user.name,
             screen_name=tweet.user.screen_name,
-            text=tweet.text,
+            text=tweet.full_text,
             url=url,
         )
 
