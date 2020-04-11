@@ -1,6 +1,7 @@
 # Matrix Tweetalong
 
-A simplistic Matrix bot for Twitter-backed watchalongs.
+A simplistic [Matrix](https://matrix.org) bot for Twitter-backed
+watchalongs.
 
 ![screenshot](https://user-images.githubusercontent.com/5547783/79041841-4306a600-7bf3-11ea-9838-4a02a65495ae.png)
 
