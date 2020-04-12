@@ -26,14 +26,39 @@ def init_twitter():
         tweet_mode="extended",
     )
 
-    # Get an initial list of tweets.
-    timeline = cli.GetListTimeline(
-        slug=slug,
-        owner_screen_name=screen_name,
-    )
-    # Attempt to extract the tweet ID to start looking from.
-    since_id = timeline[0].id if len(timeline) else None
-    return cli, since_id
+    try:
+        # Get an initial list of tweets.
+        timeline = cli.GetListTimeline(
+            slug=slug,
+            owner_screen_name=screen_name,
+        )
+        # Attempt to extract the tweet ID to start looking from.
+        since_id = timeline[0].id if len(timeline) else None
+        return cli, since_id
+    except twitter.TwitterError as e:
+        # We want to catch the "unknown list" error, which error code is 34 according to
+        # https://developer.twitter.com/en/docs/basics/response-codes
+        # We also need to do a type check on the error's message's type because the use
+        # of TwitterError is inconsistent, see
+        # https://github.com/bear/python-twitter/issues/658
+        if not isinstance(e.message, list) and e.message[0]["code"] != 34:
+            raise
+
+        # If the list couldn't be found, get the existing lists for this screen name, so
+        # we can show a helpful message to the user.
+        lists = cli.GetLists(screen_name=screen_name)
+        slugs = []
+        for l in lists:
+            slugs.append(l.slug)
+
+        # Log a message to tell the user what lists exist for this screen name so they
+        # can easily fix their config.
+        log(
+            "Couldn't find the list. The existing lists for {screen_name} are: {slugs}"
+            .format(screen_name=screen_name, slugs=", ".join(slugs))
+        )
+
+        return None, None
 
 
 async def init_matrix():
@@ -100,6 +125,10 @@ def log(msg):
 async def loop():
     twitter_client, since_id = init_twitter()
     matrix_client = await init_matrix()
+
+    if twitter_client is None or matrix_client is None:
+        log("Initialisation failed")
+        exit(1)
 
     log("Initialisation complete")
 
