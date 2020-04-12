@@ -119,7 +119,7 @@ async def loop():
                 since_id=since_id,
             )
         except twitter.TwitterError as e:
-            log("Twitter API returned an error: %s" % e.message[0]["message"])
+            log("Twitter API returned an error: %s" % e.message)
             continue
 
         # If no tweet was returned, loop over.
