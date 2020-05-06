@@ -150,6 +150,9 @@ async def loop():
         except twitter.TwitterError as e:
             log("Twitter API returned an error: %s" % e.message)
             continue
+        except Exception as e:
+            log("An error happened: %s" % e)
+            continue
 
         # If no tweet was returned, loop over.
         if not len(timeline):
