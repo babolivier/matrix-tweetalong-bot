@@ -97,7 +97,7 @@ def build_event_content(tweet):
         formatted_body = notice_template.format(
             user_name=tweet.user.name,
             screen_name=tweet.user.screen_name,
-            text=tweet.full_text,
+            text=tweet.full_text.replace("\n", "<br/>"),
             url=url,
         )
 
